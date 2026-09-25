@@ -80,6 +80,9 @@ async def sketchup_extrude_from_autocad(
         raise
 
 
+_extrude_from_autocad = sketchup_extrude_from_autocad
+
+
 async def set_wall_height_impl(wall_id: str, height_mm: float) -> dict[str, Any]:
     try:
         return await sketchup_set_wall_height(wall_id, height_mm)
@@ -101,13 +104,20 @@ async def add_roof_impl(
 
 
 def register_tools(mcp: FastMCP) -> None:
-    extrude_from_autocad_impl = sketchup_extrude_from_autocad
+    from sketchup_client import (
+        sketchup_capture_preview as su_capture_preview,
+        sketchup_health as su_health,
+        sketchup_list_elements as su_list_elements,
+        sketchup_model_info as su_model_info,
+    )
+
+    extrude_from_autocad_impl = _extrude_from_autocad
 
     @mcp.tool()
     async def sketchup_health() -> dict[str, Any]:
         """Check SketchUp Ruby bridge and the active model."""
         try:
-            return await globals()["sketchup_health"]()
+            return await su_health()
         except SketchupError as exc:
             _raise(exc)
             raise
@@ -116,7 +126,7 @@ def register_tools(mcp: FastMCP) -> None:
     async def sketchup_model_info() -> dict[str, Any]:
         """Return the open model name, units, and FIXI_* counts."""
         try:
-            return await globals()["sketchup_model_info"]()
+            return await su_model_info()
         except SketchupError as exc:
             _raise(exc)
             raise
@@ -137,7 +147,7 @@ def register_tools(mcp: FastMCP) -> None:
     async def sketchup_list_elements() -> dict[str, Any]:
         """List extruded FIXI walls, openings, slab, and roof."""
         try:
-            return await globals()["sketchup_list_elements"]()
+            return await su_list_elements()
         except SketchupError as exc:
             _raise(exc)
             raise
@@ -166,7 +176,7 @@ def register_tools(mcp: FastMCP) -> None:
     async def sketchup_capture_preview(max_width: int = 1600) -> Image:
         """Zoom the SketchUp view and return a PNG."""
         try:
-            data = await globals()["sketchup_capture_preview"](max_width)
+            data = await su_capture_preview(max_width)
         except SketchupError as exc:
             _raise(exc)
             raise
