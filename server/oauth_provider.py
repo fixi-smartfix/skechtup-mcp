@@ -5,7 +5,9 @@ from __future__ import annotations
 import os
 import secrets
 import time
+from html import escape
 from typing import Any
+from urllib.parse import urlencode
 
 from pydantic import AnyHttpUrl
 from starlette.exceptions import HTTPException
@@ -83,11 +85,14 @@ class SketchupOAuthProvider(OAuthAuthorizationServerProvider[AuthorizationCode, 
             "resource": params.resource,
             "scopes": " ".join(params.scopes or [self.scope]),
         }
-        return f"{self.login_url}?state={state}&client_id={client.client_id}"
+        return f"{self.login_url}?{urlencode({'state': state, 'client_id': client.client_id})}"
 
     async def get_login_page(self, state: str) -> HTMLResponse:
         if not state:
             raise HTTPException(400, "Missing state parameter")
+        action_url = escape(f"{self.server_url}/login/callback")
+        escaped_state = escape(state)
+        escaped_username = escape(self.username)
         html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -104,9 +109,9 @@ class SketchupOAuthProvider(OAuthAuthorizationServerProvider[AuthorizationCode, 
 <body>
   <h1>Authorize SketchUp MCP</h1>
   <p class="hint">Sign in to grant ChatGPT permission to control SketchUp on this machine.</p>
-  <form method="post" action="{self.server_url}/login/callback">
-    <input type="hidden" name="state" value="{state}"/>
-    <label>Username<input name="username" autocomplete="username" required value="{self.username}"/></label>
+  <form method="post" action="{action_url}">
+    <input type="hidden" name="state" value="{escaped_state}"/>
+    <label>Username<input name="username" autocomplete="username" required value="{escaped_username}"/></label>
     <label>Password<input name="password" type="password" autocomplete="current-password" required/></label>
     <button type="submit">Allow access</button>
   </form>

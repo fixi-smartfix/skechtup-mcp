@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import hashlib
+from urllib.parse import parse_qs, urlparse
 import secrets
 import sys
 import time
@@ -107,6 +108,61 @@ def test_bad_password_rejected():
         )
         with pytest.raises(Exception):
             await provider._complete_login("u1", "wrong", "st2")
+
+    asyncio.run(_run())
+
+
+def test_authorize_url_encodes_state_and_client_id():
+    async def _run() -> None:
+        provider = SketchupOAuthProvider(server_url="http://127.0.0.1:8788", username="u1", password="p1")
+        client = OAuthClientInformationFull(
+            client_id="client id&evil=1",
+            redirect_uris=[AnyUrl("http://127.0.0.1/callback")],
+            grant_types=["authorization_code"],
+            response_types=["code"],
+            token_endpoint_auth_method="none",
+        )
+        await provider.register_client(client)
+        _, challenge = _pkce_pair()
+
+        login_url = await provider.authorize(
+            client,
+            AuthorizationParams(
+                state='st 2&next="/evil"',
+                scopes=["sketchup"],
+                code_challenge=challenge,
+                redirect_uri=AnyUrl("http://127.0.0.1/callback"),
+                redirect_uri_provided_explicitly=True,
+                resource=None,
+            ),
+        )
+
+        parsed = urlparse(login_url)
+        query = parse_qs(parsed.query)
+        assert query["state"] == ['st 2&next="/evil"']
+        assert query["client_id"] == ["client id&evil=1"]
+        assert "next" not in query
+        assert "evil" not in query
+
+    asyncio.run(_run())
+
+
+def test_login_page_escapes_html_values():
+    async def _run() -> None:
+        provider = SketchupOAuthProvider(
+            server_url='http://127.0.0.1:8788/" onclick="steal',
+            username='u"><script>alert(1)</script>',
+            password="p1",
+        )
+
+        response = await provider.get_login_page('st"><script>alert(2)</script>')
+        html = response.body.decode()
+
+        assert 'action="http://127.0.0.1:8788/&quot; onclick=&quot;steal/login/callback"' in html
+        assert 'value="st&quot;&gt;&lt;script&gt;alert(2)&lt;/script&gt;"' in html
+        assert 'value="u&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;"' in html
+        assert '<script>alert(1)</script>' not in html
+        assert '<script>alert(2)</script>' not in html
 
     asyncio.run(_run())
 
