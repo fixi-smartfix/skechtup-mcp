@@ -81,13 +81,23 @@ async def sketchup_extrude_from_autocad(
 
 
 async def set_wall_height_impl(wall_id: str, height_mm: float) -> dict[str, Any]:
-    return await sketchup_set_wall_height(wall_id, height_mm)
+    try:
+        return await sketchup_set_wall_height(wall_id, height_mm)
+    except SketchupError as exc:
+        _raise(exc)
+        raise
 
 
 async def add_roof_impl(
     kind: str = "flat", overhang_mm: float = 400, pitch_deg: float = 30
 ) -> dict[str, Any]:
-    return await sketchup_add_roof(kind, overhang_mm, pitch_deg)
+    if kind not in ("flat", "gable"):
+        raise RuntimeError("kind must be flat or gable")
+    try:
+        return await sketchup_add_roof(kind, overhang_mm, pitch_deg)
+    except SketchupError as exc:
+        _raise(exc)
+        raise
 
 
 def register_tools(mcp: FastMCP) -> None:
