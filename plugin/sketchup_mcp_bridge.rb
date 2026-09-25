@@ -11,17 +11,15 @@ module SketchupMcpBridge
   def self.stop
     Server.instance.stop
   end
+end
 
-  class MCPSTART
-    def self.call
-      SketchupMcpBridge.start
-    end
+module Kernel
+  define_method(:MCPSTART) do
+    SketchupMcpBridge.start
   end
 
-  class MCPSTOP
-    def self.call
-      SketchupMcpBridge.stop
-    end
+  define_method(:MCPSTOP) do
+    SketchupMcpBridge.stop
   end
 end
 
