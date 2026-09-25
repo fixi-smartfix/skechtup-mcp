@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "sketchup": {
+      "command": "C:\\fixi-app\\skechtup-mcp\\.venv\\Scripts\\python.exe",
+      "args": ["C:\\fixi-app\\skechtup-mcp\\server\\server.py"],
+      "env": {
+        "SKETCHUP_MCP_URL": "http://127.0.0.1:8766",
+        "SKETCHUP_MCP_TOKEN": "REPLACE_WITH_TOKEN",
+        "AUTOCAD_MCP_URL": "http://127.0.0.1:8765",
+        "AUTOCAD_MCP_TOKEN": "REPLACE_WITH_CAD_TOKEN"
+      }
+    }
+  }
+}
