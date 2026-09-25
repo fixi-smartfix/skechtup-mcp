@@ -31,6 +31,8 @@ async def test_add_roof_forwards(monkeypatch):
     monkeypatch.setattr(tools, "sketchup_add_roof", fake)
     result = await tools.add_roof_impl("gable", 400, 30)
     assert seen["kind"] == "gable"
+    assert seen["overhang_mm"] == 400
+    assert seen["pitch_deg"] == 30
     assert result["created"] is True
 
 

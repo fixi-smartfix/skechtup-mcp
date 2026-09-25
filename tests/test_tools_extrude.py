@@ -51,6 +51,36 @@ async def test_extrude_rejects_non_mm(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_extrude_rejects_empty_walls_before_sketchup(monkeypatch):
+    calls = []
+
+    async def cad_health():
+        return {"ok": True}
+
+    async def info():
+        return {"insunits": "Millimeters"}
+
+    async def walls():
+        return {"count": 0, "walls": []}
+
+    async def su_extrude(payload):
+        calls.append(payload)
+        return {"created": True}
+
+    import tools
+
+    monkeypatch.setattr(tools, "autocad_health", cad_health)
+    monkeypatch.setattr(tools, "autocad_drawing_info", info)
+    monkeypatch.setattr(tools, "autocad_list_walls", walls)
+    monkeypatch.setattr(tools, "sketchup_extrude", su_extrude)
+
+    with pytest.raises(RuntimeError) as ei:
+        await tools.sketchup_extrude_from_autocad()
+    assert "no_walls" in str(ei.value)
+    assert calls == []
+
+
+@pytest.mark.asyncio
 async def test_extrude_happy_path(monkeypatch):
     posted = {}
 

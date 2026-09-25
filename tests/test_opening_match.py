@@ -30,6 +30,15 @@ def test_matches_door_in_colinear_gap():
     assert ys == [0, 0]
 
 
+def test_aluminum_opening_uses_door_height():
+    openings = [CadOpening("d1", "aluminum", 900)]
+    matched, warnings = match_openings(_room_with_south_door_gap(), openings)
+    assert warnings == []
+    assert len(matched) == 1
+    assert matched[0].z0 == 0
+    assert matched[0].z1 == 2100
+
+
 def test_unmatched_opening_when_width_wrong():
     openings = [CadOpening("d1", "door", 1800, swing="left")]
     matched, warnings = match_openings(_room_with_south_door_gap(), openings)

@@ -15,7 +15,6 @@ async def test_health_401_raises(monkeypatch):
     with pytest.raises(SketchupError) as ei:
         await sc.sketchup_health()
     assert ei.value.code == "sketchup_unavailable"
-    assert "ok" not in str(ei.value).lower() or True
 
 
 @pytest.mark.asyncio

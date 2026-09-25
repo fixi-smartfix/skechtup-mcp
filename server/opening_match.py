@@ -7,7 +7,7 @@ ANGLE_TOL_DEG = 2.0
 WIDTH_TOL_MM = 20.0
 COLLINEAR_TOL_MM = 20.0
 TOUCH_TOL_MM = 1.0
-DOOR_TYPES = frozenset({"door", "aluminum_door", "standard"})
+DOOR_TYPES = frozenset({"door", "aluminum", "aluminum_door", "standard"})
 
 
 @dataclass
